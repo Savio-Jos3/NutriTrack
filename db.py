@@ -61,6 +61,83 @@ def init_db():
     conn.close()
     print("Database initialized successfully!")
 
+from typing import List, Dict, Optional, Any
+
+# --- USER CRUD OPERATIONS ---
+
+def create_user(name: str, email: str, age: int, gender: str, height: float, weight: float, daily_calorie_goal: int) -> int:
+    """Inserts a new user into the database and returns the new user_id."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    query = '''
+        INSERT INTO Users (name, email, age, gender, height, weight, daily_calorie_goal)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    '''
+    # Parameterized query to prevent SQL injection
+    cursor.execute(query, (name, email, age, gender, height, weight, daily_calorie_goal))
+    conn.commit()
+    
+    new_id = cursor.lastrowid
+    conn.close()
+    return new_id
+
+def get_all_users() -> List[Dict[str, Any]]:
+    """Retrieves all users from the database."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM Users")
+    rows = cursor.fetchall()
+    conn.close()
+    
+    # Convert sqlite3.Row objects to standard Python dictionaries
+    return [dict(row) for row in rows]
+
+def get_user_by_id(user_id: int) -> Optional[Dict[str, Any]]:
+    """Retrieves a specific user by their ID."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM Users WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        return dict(row)
+    return None
+
+def update_user(user_id: int, name: str, email: str, age: int, gender: str, height: float, weight: float, daily_calorie_goal: int) -> bool:
+    """Updates an existing user's information. Returns True if successful."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    query = '''
+        UPDATE Users 
+        SET name = ?, email = ?, age = ?, gender = ?, height = ?, weight = ?, daily_calorie_goal = ?
+        WHERE user_id = ?
+    '''
+    cursor.execute(query, (name, email, age, gender, height, weight, daily_calorie_goal, user_id))
+    conn.commit()
+    
+    rows_affected = cursor.rowcount
+    conn.close()
+    
+    return rows_affected > 0
+
+def delete_user(user_id: int) -> bool:
+    """Deletes a user from the database. Returns True if successful."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("DELETE FROM Users WHERE user_id = ?", (user_id,))
+    conn.commit()
+    
+    rows_affected = cursor.rowcount
+    conn.close()
+    
+    return rows_affected > 0
+
 # Run the initialization when the file is executed directly
 if __name__ == '__main__':
     init_db()
