@@ -1,19 +1,31 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS # Import CORS
 import db
 
 app = Flask(__name__)
-
+CORS(app)
 # --- USER ENDPOINTS ---
 
 @app.route('/users', methods=['POST'])
 def create_user():
     """Creates a new user profile."""
-    data = request.get_json()
+    # silent=True prevents Flask from crashing if the payload isn't JSON
+    data = request.get_json(silent=True) 
     
-    # Input validation: check for required fields[cite: 2]
+    # 1. Check if Flask sees any JSON at all
+    if data is None:
+        print("DEBUG: No JSON detected. Check Content-Type header in Postman.")
+        return jsonify({"error": "No JSON payload received. Ensure Content-Type is application/json"}), 400
+
+    print("DEBUG: Received JSON Data:", data)
+
+    # 2. Check exactly which fields are missing
     required_fields = ['name', 'email', 'age', 'gender', 'height', 'weight', 'daily_calorie_goal']
-    if not data or not all(field in data for field in required_fields):
-        return jsonify({"error": "Missing required fields"}), 400
+    missing_fields = [field for field in required_fields if field not in data]
+    
+    if missing_fields:
+        print("DEBUG: Missing fields ->", missing_fields)
+        return jsonify({"error": f"Missing required fields: {missing_fields}"}), 400
 
     try:
         new_id = db.create_user(
@@ -25,10 +37,9 @@ def create_user():
             weight=data['weight'],
             daily_calorie_goal=data['daily_calorie_goal']
         )
-        # Returns 201 Created upon successful insertion[cite: 2]
         return jsonify({"message": "User created successfully", "user_id": new_id}), 201
     except Exception as e:
-        # Catch errors such as UNIQUE constraint failure on the email
+        print("DEBUG: Database Error ->", str(e))
         return jsonify({"error": str(e)}), 400
 
 @app.route('/users', methods=['GET'])
@@ -85,4 +96,4 @@ def delete_user(user_id):
 
 if __name__ == '__main__':
     # Run the Flask development server
-    app.run(debug=True)
+    app.run(port=5001, debug=True)
