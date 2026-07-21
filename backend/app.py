@@ -481,5 +481,18 @@ def analytics_top_foods() -> Tuple[Response, int]:
         return jsonify({"error": str(error)}), 500
 
 
+@app.route("/meals/daily", methods=["GET"])
+def get_daily_meals():
+    """Returns all meals and items consumed by a user on a specific date."""
+    user_id = request.args.get("user_id", type=int)
+    date_str = request.args.get("date")
+
+    if not user_id or not date_str:
+        return jsonify({"error": "Missing user_id or date"}), 400
+
+    meals = db.get_meals_by_date(user_id, date_str)
+    return jsonify(meals), 200
+
+
 if __name__ == "__main__":
     app.run(port=5001, debug=True)

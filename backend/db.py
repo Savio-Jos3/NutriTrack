@@ -439,3 +439,36 @@ def delete_nutrition_goal(user_id: int) -> bool:
         return cursor.rowcount > 0
     finally:
         conn.close()
+
+
+def get_meals_by_date(user_id: int, target_date: str) -> List[Dict[str, Any]]:
+    """Fetches all meals and their food items for a specific user on a specific date."""
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        # 1. Get the meals for that day
+        cursor.execute(
+            "SELECT meal_id, meal_type, meal_time FROM Meals WHERE user_id = ? AND meal_date = ? ORDER BY meal_time",
+            (user_id, target_date),
+        )
+        meals = cursor.fetchall()
+
+        result = []
+        for m in meals:
+            meal_dict = dict(m)
+            # 2. Get the specific food items for each meal
+            cursor.execute(
+                """
+                SELECT mi.quantity, mi.calories_consumed, f.food_name, f.serving_size 
+                FROM MealItems mi 
+                JOIN Foods f ON mi.food_id = f.food_id 
+                WHERE mi.meal_id = ?
+                """,
+                (meal_dict["meal_id"],),
+            )
+            meal_dict["items"] = [dict(row) for row in cursor.fetchall()]
+            result.append(meal_dict)
+
+        return result
+    finally:
+        conn.close()
