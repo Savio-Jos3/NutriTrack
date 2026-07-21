@@ -1,6 +1,7 @@
 import db
 import sqlite3
 
+
 def create_schema():
     """Executes the DDL commands to generate the database schema."""
     conn = db.get_connection()
@@ -11,7 +12,7 @@ def create_schema():
         cursor.execute("PRAGMA foreign_keys = ON;")
 
         # Users Table
-        cursor.execute('''
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS Users (
                 user_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name VARCHAR NOT NULL,
@@ -23,10 +24,10 @@ def create_schema():
                 daily_calorie_goal INTEGER,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
-        ''')
+        """)
 
         # Foods Table
-        cursor.execute('''
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS Foods (
                 food_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 food_name VARCHAR NOT NULL,
@@ -38,10 +39,10 @@ def create_schema():
                 fiber FLOAT,
                 sugar FLOAT
             )
-        ''')
+        """)
 
         # Meals Table
-        cursor.execute('''
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS Meals (
                 meal_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
@@ -50,10 +51,10 @@ def create_schema():
                 meal_time TIME NOT NULL,
                 FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
             )
-        ''')
+        """)
 
         # MealItems Table
-        cursor.execute('''
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS MealItems (
                 meal_id INTEGER NOT NULL,
                 food_id INTEGER NOT NULL,
@@ -63,10 +64,10 @@ def create_schema():
                 FOREIGN KEY (meal_id) REFERENCES Meals(meal_id) ON DELETE CASCADE,
                 FOREIGN KEY (food_id) REFERENCES Foods(food_id) ON DELETE CASCADE
             )
-        ''')
+        """)
 
         # Nutrition Goals Table
-        cursor.execute('''
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS NutritionGoals (
                 goal_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER UNIQUE NOT NULL,
@@ -77,7 +78,7 @@ def create_schema():
                 fiber_goal FLOAT,
                 FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
             )
-        ''')
+        """)
 
         conn.commit()
         print("Schema creation successful! All tables are ready.")
@@ -87,5 +88,6 @@ def create_schema():
     finally:
         conn.close()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     create_schema()
